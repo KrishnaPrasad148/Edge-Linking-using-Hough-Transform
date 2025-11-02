@@ -1,13 +1,13 @@
 # In[ ]:## Read image and convert it to grayscale image
-## Developed by : 
-## Reg no : 
+## Developed by : Krishna Prasad S
+## Reg no : 212223230108
 import numpy as np
 import cv2
 import matplotlib.pyplot as plt
-#READ THE GRAY IMAGE USING IMREAD 
-#READ THE COLOR IMAGE USING IMREAD
-#CONVERT THE COLOR FROM BGR TO RGB
-#CONVERT THE COLOR FROM GRAY TO RGB
+image = cv2.imread('archery1.jpg')
+plt.imshow(cv2.cvtColor(image, cv2.COLOR_BGR2RGB))  
+plt.title("Input Image")
+plt.axis('off')
 gray = cv2.GaussianBlur(gray,(3,3),0)
 plt.figure(figsize=(13,13))
 plt.subplot(1,2,1)
@@ -37,7 +37,6 @@ plt.title("Result Image")
 plt.axis("off")
 plt.show()
 ## Display the result
-## Developed by :
-## Reg no : 
+
 
 
