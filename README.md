@@ -88,7 +88,7 @@ plt.axis('off')
 
 ![alt text](canny.png)
 
-### Display the result of Hough transform
+### The result of Hough transform
 
 ![alt text](h_transform.png)
 
