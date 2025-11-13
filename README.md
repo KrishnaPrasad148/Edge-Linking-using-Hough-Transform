@@ -53,25 +53,71 @@ plt.imshow(gray_image, cmap = 'gray')
 plt.title("Gray Image")
 plt.axis('off')
 
-# Canny Edge detector
+# Use global threshold based on grayscale intensity.
 
-edges = cv2.Canny(gray_image, 50, 150)
-plt.imshow(edges, cmap='gray')
-plt.title("Canny Edge Detector")
-plt.axis('off')
+threshold = cv2.inRange(gray_image, 150, 255)
 
-# Hough transform
+plt.figure(figsize = (20, 10))
+plt.subplot(1,1,1); plt.imshow(threshold, cmap = 'gray'); plt.title('Threshold');
 
-lines = cv2.HoughLinesP(edges, 1, np.pi / 180, 100, minLineLength=50, maxLineGap=10)
-for line in lines:
-    x1, y1, x2, y2 = line[0]  
-    cv2.line(image, (x1, y1), (x2, y2), (186,85,211), 3)  
+#  Region masking: Select vertices according to the input image.
+roi_vertices = np.array([[[100, 540], [900, 540], [515, 320], [450, 320]]])
 
-# Display the result of Hough Transform (Image with lines)
+# Defining a blank mask.
+mask = np.zeros_like(threshold)   
 
-plt.imshow(cv2.cvtColor(image, cv2.COLOR_BGR2RGB))  # Image with lines drawn
-plt.title("Result of Hough Transform")
-plt.axis('off')
+# Defining a 3 channel or 1 channel color to fill the mask.
+if len(threshold.shape) > 2:
+    channel_count = threshold.shape[2]  
+    ignore_mask_color = (255,) * channel_count
+else:
+    ignore_mask_color = 255
+
+# Filling pixels inside the polygon.
+cv2.fillPoly(mask, roi_vertices, ignore_mask_color)
+
+# Constructing the region of interest based on where mask pixels are nonzero.
+roi = cv2.bitwise_and(threshold, mask)
+
+plt.figure(figsize = (20, 10))
+plt.subplot(1,3,1); plt.imshow(threshold, cmap = 'gray'); plt.title('Initial threshold')
+plt.subplot(1,3,2); plt.imshow(mask, cmap = 'gray'); plt.title('Polyfill mask')
+plt.subplot(1,3,3); plt.imshow(roi, cmap = 'gray'); plt.title('Isolated roi');
+
+# Perform Edge Detection.
+low_threshold = 50
+high_threshold = 100
+edges = cv2.Canny(roi, low_threshold, high_threshold)
+
+# Smooth with a Gaussian blur.
+kernel_size = 3
+canny_blur = cv2.GaussianBlur(edges, (kernel_size, kernel_size), 0)
+
+plt.figure(figsize = (20, 10))
+plt.subplot(1,2,1); plt.imshow(edges, cmap = 'gray'); plt.title('Edge detection')
+plt.subplot(1,2,2); plt.imshow(canny_blur, cmap = 'gray'); plt.title('Blurred edges');
+
+def draw_lines(img, lines, color = [255, 0, 0], thickness = 2):
+    if lines is not None:
+        for line in lines:
+            for x1,y1,x2,y2 in line:
+                cv2.line(img, (x1, y1), (x2, y2), color, thickness)
+
+# Hough transform parameters set according to the input image.
+rho = 1
+theta = np.pi / 180
+threshold = 50
+min_line_len = 10
+max_line_gap = 20
+
+lines = cv2.HoughLinesP(
+    canny_blur, rho, theta, threshold, minLineLength = min_line_len, maxLineGap = max_line_gap)
+
+hough = np.zeros((image.shape[0], image.shape[1], 3), dtype = np.uint8)
+draw_lines(hough, lines)
+
+print("Found {} lines, including: {}".format(len(lines), lines[0]))
+plt.figure(figsize = (15, 10)); plt.imshow(hough);
 
 ```
 
@@ -80,13 +126,22 @@ plt.axis('off')
 
 ### Input image and grayscale image
 
-![alt text](input.png)
+![alt text](road.jpg)
 
 ![alt text](gray.png)
 
-### Canny Edge detector output
+### Create Threshold
+
+![alt text](threshold.png)
+
+### Selecting the Region of Interest
+
+![alt text](sep.png)
+
+### Detect Edges and Smooth Noise
 
 ![alt text](canny.png)
+
 
 ### The result of Hough transform
 
